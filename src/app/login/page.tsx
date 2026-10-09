@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
@@ -12,6 +12,12 @@ function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (from !== "/") {
+      toast.error("এই পেজটি দেখতে আপনাকে লগইন করতে হবে।", { id: "auth-redirect" });
+    }
+  }, [from]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

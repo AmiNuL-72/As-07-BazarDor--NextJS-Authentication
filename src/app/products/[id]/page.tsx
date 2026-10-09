@@ -6,21 +6,15 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
+import { notFound } from "next/navigation";
+
 async function ProductDetail({ paramsPromise }: { paramsPromise: Promise<{ id: string }> }) {
   const { id } = await paramsPromise;
   const products = await getProducts();
   const product = products.find((p) => String(p.id) === id || p.slug === id);
 
   if (!product) {
-    return (
-      <div className="py-20 text-center">
-        <div className="text-6xl mb-4">🔍</div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-3">পণ্যটি পাওয়া যায়নি</h2>
-        <Link href="/" className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0b7a48] text-white rounded-lg font-semibold text-sm">
-          ← হোম পেজে ফিরে যান
-        </Link>
-      </div>
-    );
+    notFound();
   }
 
   const dir = product.change?.dir || "flat";

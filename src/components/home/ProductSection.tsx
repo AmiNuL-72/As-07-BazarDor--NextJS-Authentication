@@ -43,9 +43,30 @@ export default function ProductSections() {
 
   if (isLoading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-[#0b7a48] border-t-transparent mb-3" />
-        <p className="text-sm text-gray-500 font-medium">পণ্যের তালিকা লোড হচ্ছে...</p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 space-y-12 sm:space-y-16 py-10">
+        <section>
+          <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-5" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl border border-gray-100 p-5 animate-pulse">
+                <div className="flex items-start gap-3.5">
+                  <div className="w-12 h-12 rounded-xl bg-gray-100 shrink-0" />
+                  <div className="flex-1 space-y-2 pt-1">
+                    <div className="h-4 bg-gray-100 rounded w-3/4" />
+                    <div className="h-3 bg-gray-100 rounded w-1/3" />
+                  </div>
+                </div>
+                <div className="mt-5 pt-3 border-t border-gray-50 flex items-end justify-between">
+                  <div className="space-y-1.5">
+                    <div className="h-2.5 bg-gray-100 rounded w-16" />
+                    <div className="h-5 bg-gray-100 rounded w-24" />
+                  </div>
+                  <div className="h-7 bg-gray-100 rounded-md w-16" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
       </div>
     );
   }
@@ -99,7 +120,13 @@ export default function ProductSections() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="select select-bordered select-sm text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-[#0b7a48]/20 focus:border-[#0b7a48] cursor-pointer"
+              className="select select-bordered select-sm
+                !bg-white !text-gray-800
+                border-gray-300
+                focus:outline-none focus:ring-2
+                focus:ring-[#0b7a48]/20
+                focus:border-[#0b7a48]
+                cursor-pointer"
             >
               <option value="default">ডিফল্ট</option>
               <option value="price-asc">দাম: কম থেকে বেশি</option>

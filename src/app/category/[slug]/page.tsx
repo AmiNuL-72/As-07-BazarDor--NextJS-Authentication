@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { Product, Category } from "@/types";
 import ProductCard from "@/components/products/ProductCard";
 import { getProducts, getCategories, toBengaliDigits } from "@/services/bazarApi";
@@ -41,7 +42,7 @@ function CategoryContent({ params }: PageProps) {
   const [category, setCategory] = useState<Category | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [sortBy, setSortBy] = useState<SortOption>("default");
-  const [notFound, setNotFound] = useState(false);
+  const [isNotFound, setIsNotFound] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -57,7 +58,7 @@ function CategoryContent({ params }: PageProps) {
         );
 
         if (!cat) {
-          setNotFound(true);
+          setIsNotFound(true);
           return;
         }
 
@@ -67,10 +68,10 @@ function CategoryContent({ params }: PageProps) {
         );
         setProducts(filtered);
 
-        if (filtered.length === 0) setNotFound(true);
+        if (filtered.length === 0) setIsNotFound(true);
       } catch (err) {
         console.error(err);
-        setNotFound(true);
+        setIsNotFound(true);
       } finally {
         setIsLoading(false);
       }
@@ -85,23 +86,8 @@ function CategoryContent({ params }: PageProps) {
     return 0;
   });
 
-  // ── Empty / 404 State ────────────────────────────────────────────────────────
-  if (!isLoading && notFound) {
-    return (
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
-        <div className="text-6xl mb-4">🔍</div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">ক্যাটাগরিটি পাওয়া যায়নি</h2>
-        <p className="text-gray-500 text-sm mb-6">
-          <span className="font-mono bg-gray-100 px-2 py-0.5 rounded">{slug}</span> নামের কোনো ক্যাটাগরি নেই।
-        </p>
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-[#0b7a48] text-white font-semibold rounded-lg shadow-sm hover:bg-[#08683c] transition-all text-sm"
-        >
-          ← হোম পেজে ফিরে যান
-        </Link>
-      </div>
-    );
+  if (!isLoading && isNotFound) {
+    notFound();
   }
 
   return (
@@ -142,14 +128,20 @@ function CategoryContent({ params }: PageProps) {
         <div className="flex items-center gap-2 shrink-0">
           <label className="text-sm text-gray-500 font-medium hidden sm:block">সাজান:</label>
           <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as SortOption)}
-            className="select select-bordered select-sm text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-[#0b7a48]/20 focus:border-[#0b7a48] cursor-pointer"
-          >
-            <option value="default">ডিফল্ট</option>
-            <option value="price-asc">দাম: কম থেকে বেশি</option>
-            <option value="price-desc">দাম: বেশি থেকে কম</option>
-          </select>
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value as SortOption)}
+          className="select select-bordered select-sm
+            !bg-white !text-gray-800
+            border-gray-300
+            focus:outline-none focus:ring-2
+            focus:ring-[#0b7a48]/20
+            focus:border-[#0b7a48]
+            cursor-pointer"
+        >
+          <option value="default">ডিফল্ট</option>
+          <option value="price-asc">দাম: কম থেকে বেশি</option>
+          <option value="price-desc">দাম: বেশি থেকে কম</option>
+        </select>
         </div>
       </div>
 
