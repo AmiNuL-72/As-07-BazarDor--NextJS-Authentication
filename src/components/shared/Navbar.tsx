@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Category, TickerItem } from "@/types";
 import {
   getCategories,
@@ -11,7 +12,8 @@ import {
   DEFAULT_TICKER_ITEMS,
 } from "@/services/bazarApi";
 
-export default function Navbar() {
+function NavbarContent() {
+  const pathname = usePathname();
   const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
   const [tickerItems, setTickerItems] = useState<TickerItem[]>(DEFAULT_TICKER_ITEMS);
   const [activeCategory, setActiveCategory] = useState<string>("chal");
@@ -152,11 +154,11 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="flex items-center justify-start md:justify-center overflow-x-auto py-2.5 gap-1.5 sm:gap-2.5 no-scrollbar scroll-smooth">
             {categories.map((cat) => {
-              const isActive = activeCategory === cat.id || activeCategory === cat.slug;
+              const isActive = pathname === `/category/${cat.slug}` || (pathname === '/' && activeCategory === cat.id);
               return (
-                <button
+                <Link
                   key={cat.id}
-                  type="button"
+                  href={`/category/${cat.slug}`}
                   onClick={() => setActiveCategory(cat.id)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm sm:text-[14.5px] transition-all whitespace-nowrap cursor-pointer select-none ${
                     isActive
@@ -166,7 +168,7 @@ export default function Navbar() {
                 >
                   <span className="text-base leading-none">{cat.icon}</span>
                   <span>{cat.nameBn}</span>
-                </button>
+                </Link>
               );
             })}
           </nav>
@@ -240,5 +242,12 @@ export default function Navbar() {
         </div>
       </div>
     </header>
+  );
+}
+export default function Navbar() {
+  return (
+    <React.Suspense fallback={<div className="h-20 bg-white" />}>
+      <NavbarContent />
+    </React.Suspense>
   );
 }
