@@ -2,41 +2,43 @@
 
 import React, { useState, Suspense } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
-function LoginForm() {
+function RegisterForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const from = searchParams.get("from") || "/";
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    // Mock validation
-    if (!email || password.length < 6) {
-      toast.error("ইমেইল ও সঠিক পাসওয়ার্ড দিন (কমপক্ষে ৬ অক্ষর)।");
+    if (!name || !email || password.length < 6) {
+      toast.error("সবগুলো তথ্য সঠিকভাবে দিন (পাসওয়ার্ড কমপক্ষে ৬ অক্ষর)।");
+      setLoading(false);
+      return;
+    }
+    
+    if (password !== confirmPassword) {
+      toast.error("পাসওয়ার্ড দুটি মিলছে না!");
       setLoading(false);
       return;
     }
 
     try {
-      // Mock auth delay
+      // Mock API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
-      document.cookie = "bazar_auth=true; path=/; max-age=86400";
-      localStorage.setItem("bazar_logged_in", "true");
-      
-      toast.success("সফলভাবে লগইন হয়েছে!");
+      toast.success("অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে! দয়া করে লগইন করুন।");
       
       setTimeout(() => {
-        router.push(from);
-      }, 1000);
+        router.push("/login");
+      }, 1500);
     } catch (error) {
-      toast.error("লগইন ব্যর্থ হয়েছে। আবার চেষ্টা করুন।");
+      toast.error("অ্যাকাউন্ট তৈরি ব্যর্থ হয়েছে। আবার চেষ্টা করুন।");
       setLoading(false);
     }
   };
@@ -48,7 +50,7 @@ function LoginForm() {
       document.cookie = "bazar_auth=true; path=/; max-age=86400";
       localStorage.setItem("bazar_logged_in", "true");
       toast.success("সফলভাবে লগইন হয়েছে!");
-      router.push(from);
+      router.push("/");
     }, 1500);
   };
 
@@ -56,14 +58,25 @@ function LoginForm() {
     <div className="min-h-[calc(100vh-180px)] flex flex-col items-center justify-center py-12 px-4 bg-[#f9faf9]">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">সাইন ইন</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">অ্যাকাউন্ট তৈরি করুন</h1>
           <p className="mt-2 text-sm text-gray-500">
-            বিস্তারিত দাম, বাজার তুলনা ও প্রোফাইল দেখতে অ্যাকাউন্টে ঢুকুন।
+            বিনা খরচে সাইন আপ করে সব বিস্তারিত দাম দেখুন।
           </p>
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-200/70 shadow-xs p-6 sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-800 mb-1.5">নাম</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="যেমন: আমিনুল ইসলাম"
+                required
+                className="w-full px-3.5 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0b7a48]/20 focus:border-[#0b7a48] transition-all placeholder:text-gray-400"
+              />
+            </div>
             <div>
               <label className="block text-sm font-semibold text-gray-800 mb-1.5">ইমেইল</label>
               <input
@@ -86,12 +99,23 @@ function LoginForm() {
                 className="w-full px-3.5 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0b7a48]/20 focus:border-[#0b7a48] transition-all placeholder:text-gray-400"
               />
             </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-800 mb-1.5">পাসওয়ার্ড নিশ্চিত করুন</label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="আবার লিখুন"
+                required
+                className="w-full px-3.5 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0b7a48]/20 focus:border-[#0b7a48] transition-all placeholder:text-gray-400"
+              />
+            </div>
             <button
               type="submit"
               disabled={loading}
               className="w-full mt-2 py-2.5 px-4 bg-[#0b7a48] hover:bg-[#08683c] disabled:opacity-60 text-white font-semibold rounded-lg shadow-sm transition-all text-sm cursor-pointer"
             >
-              {loading ? "লোড হচ্ছে..." : "সাইন ইন"}
+              {loading ? "লোড হচ্ছে..." : "অ্যাকাউন্ট তৈরি করুন"}
             </button>
           </form>
 
@@ -104,7 +128,8 @@ function LoginForm() {
           <div className="flex gap-3 mt-6">
             <button
               onClick={() => handleSocialLogin("Google")}
-              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              type="button"
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -116,7 +141,8 @@ function LoginForm() {
             </button>
             <button
               onClick={() => handleSocialLogin("GitHub")}
-              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              type="button"
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
@@ -126,9 +152,9 @@ function LoginForm() {
           </div>
 
           <p className="mt-6 text-center text-sm text-gray-600">
-            অ্যাকাউন্ট নেই?{" "}
-            <Link href="/register" className="font-semibold text-[#0b7a48] hover:underline">
-              সাইন আপ করুন
+            অ্যাকাউন্ট আছে?{" "}
+            <Link href="/login" className="font-semibold text-[#0b7a48] hover:underline">
+              সাইন ইন করুন
             </Link>
           </p>
         </div>
@@ -141,10 +167,10 @@ function LoginForm() {
   );
 }
 
-export default function LoginPage() {
+export default function RegisterPage() {
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center">লোড হচ্ছে...</div>}>
-      <LoginForm />
+      <RegisterForm />
     </Suspense>
   );
 }

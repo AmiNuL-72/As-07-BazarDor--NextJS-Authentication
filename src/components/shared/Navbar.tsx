@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import toast from "react-hot-toast";
 import { Category, TickerItem } from "@/types";
 import {
   getCategories,
@@ -61,6 +62,11 @@ function NavbarContent() {
   const handleToggleAuth = (status: boolean) => {
     setIsLoggedIn(status);
     localStorage.setItem("bazar_logged_in", status ? "true" : "false");
+    
+    if (!status) {
+      document.cookie = "bazar_auth=; path=/; max-age=0";
+      toast.success("সফলভাবে সাইন আউট হয়েছেন।");
+    }
   };
 
   return (
