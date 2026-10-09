@@ -19,6 +19,7 @@ function NavbarContent() {
   const [tickerItems, setTickerItems] = useState<TickerItem[]>(DEFAULT_TICKER_ITEMS);
   const [activeCategory, setActiveCategory] = useState<string>("chal");
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [userName, setUserName] = useState<string>("Rezwan Ahmed");
   const [date, setDate] = useState<string>("");
 
   useEffect(() => {
@@ -32,7 +33,25 @@ function NavbarContent() {
     if (savedAuth === "true") {
       setIsLoggedIn(true);
     }
+    
+    const loadUserName = () => {
+      const savedName = localStorage.getItem("bazar_user_name");
+      if (savedName) setUserName(savedName);
+    };
+    loadUserName();
+    
+    window.addEventListener("profile_updated", loadUserName);
+    window.addEventListener("auth_changed", () => {
+      setIsLoggedIn(localStorage.getItem("bazar_logged_in") === "true");
+    });
 
+    return () => {
+      window.removeEventListener("profile_updated", loadUserName);
+      // cleanup auth_changed if needed
+    };
+  }, []);
+
+  useEffect(() => {
     // Fetch data from API with fallback
     async function fetchNavbarData() {
       try {
@@ -126,29 +145,41 @@ function NavbarContent() {
                 </Link>
               </>
             ) : (
-              <div className="flex items-center gap-3">
-                {/* Profile Pill */}
-                <Link
-                  href="/profile"
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200/70 text-emerald-900 hover:bg-emerald-100/70 transition-colors"
-                >
-                  <div className="w-7 h-7 rounded-full bg-[#0b7a48] text-white flex items-center justify-center text-xs font-bold shadow-xs">
-                    আ
+              <div className="dropdown dropdown-end">
+                <div tabIndex={0} role="button" className="flex items-center gap-2 cursor-pointer p-1.5 sm:px-3 sm:py-2 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200">
+                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gray-100 overflow-hidden shrink-0 border border-gray-200">
+                    <img 
+                      src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userName.replace(/ /g, '')}`} 
+                      alt="Avatar" 
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                  <span className="text-sm font-medium hidden sm:inline">
-                    প্রোফাইল
+                  <span className="text-sm font-semibold text-gray-700 hidden sm:block">
+                    {userName.split(" ")[0]} <span className="text-gray-400 text-xs ml-0.5">▼</span>
                   </span>
-                </Link>
-
-                {/* Sign-out Button */}
-                <button
-                  type="button"
-                  onClick={() => handleToggleAuth(false)}
-                  className="px-3 sm:px-4 py-1.5 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200/80 rounded-lg transition-colors cursor-pointer"
-                  title="সাইন আউট করুন"
-                >
-                  সাইন আউট
-                </button>
+                </div>
+                <ul tabIndex={0} className="dropdown-content z-[100] menu p-3 sm:p-4 shadow-xl bg-white rounded-2xl w-56 sm:w-64 border border-gray-100 mt-2">
+                  <div className="flex flex-col gap-0.5 mb-3 pb-3 border-b border-gray-100 px-2 pt-1">
+                    <span className="text-sm font-bold text-gray-900">{userName}</span>
+                    <span className="text-xs text-gray-500 truncate">rezwanahmed@gmail.com</span>
+                  </div>
+                  <li>
+                    <Link href="/profile" className="text-sm font-semibold text-gray-700 hover:text-[#0b7a48] hover:bg-emerald-50 px-3 py-2.5 rounded-lg flex items-center gap-2.5 transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      আমার প্রোফাইল
+                    </Link>
+                  </li>
+                  <li>
+                    <button onClick={() => handleToggleAuth(false)} className="text-sm font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 px-3 py-2.5 rounded-lg flex items-center gap-2.5 mt-1 transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      সাইন আউট
+                    </button>
+                  </li>
+                </ul>
               </div>
             )}
           </div>

@@ -144,7 +144,7 @@ function CategoryContent({ params }: PageProps) {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as SortOption)}
-            className="text-sm border border-gray-200 bg-white rounded-lg px-3 py-1.5 text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-[#0b7a48]/20 focus:border-[#0b7a48] cursor-pointer"
+            className="select select-bordered select-sm text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-[#0b7a48]/20 focus:border-[#0b7a48] cursor-pointer"
           >
             <option value="default">ডিফল্ট</option>
             <option value="price-asc">দাম: কম থেকে বেশি</option>
