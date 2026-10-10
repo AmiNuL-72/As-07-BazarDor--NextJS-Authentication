@@ -3,37 +3,42 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { authClient } from "@/lib/auth-client";
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [name, setName] = useState("Rezwan Ahmed");
+  const { data: session, isPending } = authClient.useSession();
+  
+  const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
-  const email = "rezwanahmed@gmail.com";
 
   useEffect(() => {
-    const isLoggedIn = localStorage.getItem("bazar_logged_in") === "true";
-    if (!isLoggedIn) {
-      router.push("/login?from=/profile");
+    if (!isPending) {
+      if (!session) {
+        router.push("/login?from=/profile");
+      } else if (session.user) {
+        const timer = setTimeout(() => {
+          setName((prev) => prev || session.user.name || "");
+        }, 0);
+        return () => clearTimeout(timer);
+      }
     }
-    
-    // Load name from local storage if exists (mocking update)
-    const savedName = localStorage.getItem("bazar_user_name");
-    if (savedName) {
-      setName(savedName);
-    }
-  }, [router]);
+  }, [session, isPending, router]);
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Mock API delay
-      await new Promise(resolve => setTimeout(resolve, 800));
-      localStorage.setItem("bazar_user_name", name);
-      // Trigger a custom event so the Navbar can update its display name
-      window.dispatchEvent(new Event("profile_updated"));
-      toast.success("তথ্য সফলভাবে আপডেট করা হয়েছে!");
+      const { data, error } = await authClient.updateUser({
+        name: name,
+      });
+      
+      if (error) {
+        toast.error(error.message || "তথ্য আপডেট করতে সমস্যা হয়েছে।");
+      } else {
+        toast.success("তথ্য সফলভাবে আপডেট করা হয়েছে!");
+      }
     } catch (error) {
       toast.error("তথ্য আপডেট করতে সমস্যা হয়েছে।");
     } finally {
@@ -41,13 +46,29 @@ export default function ProfilePage() {
     }
   };
 
-  const handleLogout = () => {
-    document.cookie = "bazar_auth=; path=/; max-age=0";
-    localStorage.setItem("bazar_logged_in", "false");
-    window.dispatchEvent(new Event("auth_changed"));
-    toast.success("সফলভাবে সাইন আউট হয়েছেন।");
-    router.push("/login");
+  const handleLogout = async () => {
+    try {
+      await authClient.signOut();
+      toast.success("সফলভাবে সাইন আউট হয়েছেন।");
+      router.push("/login");
+    } catch (error) {
+      toast.error("সাইন আউট করতে সমস্যা হয়েছে।");
+    }
   };
+
+  if (isPending) {
+    return (
+      <div className="min-h-[calc(100vh-180px)] py-8 sm:py-12 bg-[#f4f5f4] flex justify-center items-center">
+        <span className="loading loading-spinner loading-lg text-[#0b7a48]"></span>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return null; // Will redirect in useEffect
+  }
+
+  const email = session.user.email || "";
 
   return (
     <div className="min-h-[calc(100vh-180px)] py-8 sm:py-12 bg-[#f4f5f4]">
@@ -64,13 +85,13 @@ export default function ProfilePage() {
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-full bg-gray-100 overflow-hidden shrink-0 border border-gray-200">
               <img 
-                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${name.replace(/ /g, '')}`} 
+                src={session.user.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${name.replace(/ /g, '')}`} 
                 alt="Avatar" 
                 className="w-full h-full object-cover"
               />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-gray-900">{name}</h2>
+              <h2 className="text-lg font-bold text-gray-900">{session.user.name}</h2>
               <p className="text-sm text-gray-500 mt-0.5">{email}</p>
             </div>
           </div>

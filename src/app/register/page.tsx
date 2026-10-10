@@ -2,11 +2,15 @@
 
 import React, { useState, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
+
+import { authClient } from "@/lib/auth-client";
 
 function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const from = searchParams.get("from");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -30,28 +34,43 @@ function RegisterForm() {
     }
 
     try {
-      // Mock API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success("অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে! দয়া করে লগইন করুন।");
-      
-      setTimeout(() => {
-        router.push("/login");
-      }, 1500);
-    } catch (error) {
+      const { error } = await authClient.signUp.email({
+        email,
+        password,
+        name,
+      });
+
+      if (error) {
+        toast.error(error.message || "অ্যাকাউন্ট তৈরি ব্যর্থ হয়েছে। আবার চেষ্টা করুন।");
+      } else {
+        toast.success("অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে! এখন লগইন করুন।");
+        const loginUrl = from ? `/login?from=${encodeURIComponent(from)}` : "/login";
+        router.push(loginUrl);
+      }
+    } catch {
       toast.error("অ্যাকাউন্ট তৈরি ব্যর্থ হয়েছে। আবার চেষ্টা করুন।");
+    } finally {
       setLoading(false);
     }
   };
 
-  const handleSocialLogin = (provider: string) => {
-    toast.success(`${provider} দিয়ে লগইন হচ্ছে...`);
-    // Mock successful login
-    setTimeout(() => {
-      document.cookie = "bazar_auth=true; path=/; max-age=86400";
-      localStorage.setItem("bazar_logged_in", "true");
-      toast.success("সফলভাবে লগইন হয়েছে!");
-      router.push("/");
-    }, 1500);
+  const handleSocialLogin = async (provider: "google" | "github") => {
+    toast.loading(`${provider} দিয়ে লগইন হচ্ছে...`, { id: "social-login" });
+    try {
+      const destination =
+        from && !from.startsWith("/login") && !from.startsWith("/register")
+          ? from
+          : "/";
+      const { error } = await authClient.signIn.social({
+        provider: provider,
+        callbackURL: destination,
+      });
+      if (error) {
+        toast.error(error.message || "লগইন ব্যর্থ হয়েছে।", { id: "social-login" });
+      }
+    } catch {
+      toast.error("লগইন ব্যর্থ হয়েছে।", { id: "social-login" });
+    }
   };
 
   return (
@@ -127,7 +146,7 @@ function RegisterForm() {
 
           <div className="flex gap-3 mt-6">
             <button
-              onClick={() => handleSocialLogin("Google")}
+              onClick={() => handleSocialLogin("google")}
               type="button"
               className="w-full flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
             >
@@ -140,7 +159,7 @@ function RegisterForm() {
               Google
             </button>
             <button
-              onClick={() => handleSocialLogin("GitHub")}
+              onClick={() => handleSocialLogin("github")}
               type="button"
               className="w-full flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
             >
@@ -153,7 +172,10 @@ function RegisterForm() {
 
           <p className="mt-6 text-center text-sm text-gray-600">
             অ্যাকাউন্ট আছে?{" "}
-            <Link href="/login" className="font-semibold text-[#0b7a48] hover:underline">
+            <Link
+              href={from ? `/login?from=${encodeURIComponent(from)}` : "/login"}
+              className="font-semibold text-[#0b7a48] hover:underline"
+            >
               সাইন ইন করুন
             </Link>
           </p>

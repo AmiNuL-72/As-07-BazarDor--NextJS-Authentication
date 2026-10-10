@@ -58,6 +58,7 @@ function CategoryContent({ params }: PageProps) {
         );
 
         if (!cat) {
+          // Invalid slug → show 404
           setIsNotFound(true);
           return;
         }
@@ -67,8 +68,7 @@ function CategoryContent({ params }: PageProps) {
           (p) => p.category === slug || p.category === cat.id
         );
         setProducts(filtered);
-
-        if (filtered.length === 0) setIsNotFound(true);
+        // If category exists but has no products, still show the page (empty state)
       } catch (err) {
         console.error(err);
         setIsNotFound(true);
@@ -176,7 +176,39 @@ function CategoryContent({ params }: PageProps) {
 
 export default function CategoryPage({ params }: PageProps) {
   return (
-    <React.Suspense fallback={<div>Loading...</div>}>
+    <React.Suspense
+      fallback={
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-20">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-xs px-6 py-5 mb-5 flex items-center gap-4 animate-pulse">
+            <div className="w-12 h-12 rounded-xl bg-gray-100 shrink-0" />
+            <div className="space-y-2">
+              <div className="h-6 w-24 bg-gray-100 rounded" />
+              <div className="h-4 w-48 bg-gray-100 rounded" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl border border-gray-100 p-5 animate-pulse">
+                <div className="flex items-start gap-3.5">
+                  <div className="w-12 h-12 rounded-xl bg-gray-100 shrink-0" />
+                  <div className="flex-1 space-y-2 pt-1">
+                    <div className="h-4 bg-gray-100 rounded w-3/4" />
+                    <div className="h-3 bg-gray-100 rounded w-1/3" />
+                  </div>
+                </div>
+                <div className="mt-5 pt-3 border-t border-gray-50 flex items-end justify-between">
+                  <div className="space-y-1.5">
+                    <div className="h-2.5 bg-gray-100 rounded w-16" />
+                    <div className="h-5 bg-gray-100 rounded w-24" />
+                  </div>
+                  <div className="h-7 bg-gray-100 rounded-md w-16" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      }
+    >
       <CategoryContent params={params} />
     </React.Suspense>
   );

@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 
+import { authClient } from "@/lib/auth-client";
+
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const from = searchParams.get("from") || "/";
   const [email, setEmail] = useState("");
@@ -23,7 +24,6 @@ function LoginForm() {
     e.preventDefault();
     setLoading(true);
 
-    // Mock validation
     if (!email || password.length < 6) {
       toast.error("ইমেইল ও সঠিক পাসওয়ার্ড দিন (কমপক্ষে ৬ অক্ষর)।");
       setLoading(false);
@@ -31,31 +31,47 @@ function LoginForm() {
     }
 
     try {
-      // Mock auth delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      document.cookie = "bazar_auth=true; path=/; max-age=86400";
-      localStorage.setItem("bazar_logged_in", "true");
-      
-      toast.success("সফলভাবে লগইন হয়েছে!");
-      
-      setTimeout(() => {
-        router.push(from);
-      }, 1000);
-    } catch (error) {
+      const { error } = await authClient.signIn.email({
+        email,
+        password,
+      });
+
+      if (error) {
+        toast.error(error.message || "লগইন ব্যর্থ হয়েছে। আবার চেষ্টা করুন।");
+      } else {
+        toast.success("সফলভাবে লগইন হয়েছে!");
+        const destination =
+          from && !from.startsWith("/login") && !from.startsWith("/register")
+            ? from
+            : "/";
+        setTimeout(() => {
+          window.location.href = destination;
+        }, 500);
+      }
+    } catch {
       toast.error("লগইন ব্যর্থ হয়েছে। আবার চেষ্টা করুন।");
+    } finally {
       setLoading(false);
     }
   };
 
-  const handleSocialLogin = (provider: string) => {
-    toast.success(`${provider} দিয়ে লগইন হচ্ছে...`);
-    // Mock successful login
-    setTimeout(() => {
-      document.cookie = "bazar_auth=true; path=/; max-age=86400";
-      localStorage.setItem("bazar_logged_in", "true");
-      toast.success("সফলভাবে লগইন হয়েছে!");
-      router.push(from);
-    }, 1500);
+  const handleSocialLogin = async (provider: "google" | "github") => {
+    toast.loading(`${provider} দিয়ে লগইন হচ্ছে...`, { id: "social-login" });
+    try {
+      const destination =
+        from && !from.startsWith("/login") && !from.startsWith("/register")
+          ? from
+          : "/";
+      const { error } = await authClient.signIn.social({
+        provider: provider,
+        callbackURL: destination,
+      });
+      if (error) {
+        toast.error(error.message || "লগইন ব্যর্থ হয়েছে।", { id: "social-login" });
+      }
+    } catch {
+      toast.error("লগইন ব্যর্থ হয়েছে।", { id: "social-login" });
+    }
   };
 
   return (
@@ -109,7 +125,7 @@ function LoginForm() {
 
           <div className="flex gap-3 mt-6">
             <button
-              onClick={() => handleSocialLogin("Google")}
+              onClick={() => handleSocialLogin("google")}
               className="w-full flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -121,7 +137,7 @@ function LoginForm() {
               Google
             </button>
             <button
-              onClick={() => handleSocialLogin("GitHub")}
+              onClick={() => handleSocialLogin("github")}
               className="w-full flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -133,7 +149,10 @@ function LoginForm() {
 
           <p className="mt-6 text-center text-sm text-gray-600">
             অ্যাকাউন্ট নেই?{" "}
-            <Link href="/register" className="font-semibold text-[#0b7a48] hover:underline">
+            <Link
+              href={from && from !== "/" ? `/register?from=${encodeURIComponent(from)}` : "/register"}
+              className="font-semibold text-[#0b7a48] hover:underline"
+            >
               সাইন আপ করুন
             </Link>
           </p>

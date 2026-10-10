@@ -1,5 +1,6 @@
 import React, { Suspense } from "react";
 import Link from "next/link";
+import { connection } from "next/server";
 import { getProducts, formatCardUnit, formatBengaliPrice, toBengaliDigits } from "@/services/bazarApi";
 
 interface PageProps {
@@ -8,8 +9,12 @@ interface PageProps {
 
 import { notFound } from "next/navigation";
 
+
 async function ProductDetail({ paramsPromise }: { paramsPromise: Promise<{ id: string }> }) {
+  // connection() ties rendering to request time — needed for no-store fetches
+  await connection();
   const { id } = await paramsPromise;
+
   const products = await getProducts();
   const product = products.find((p) => String(p.id) === id || p.slug === id);
 

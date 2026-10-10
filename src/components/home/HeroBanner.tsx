@@ -8,10 +8,13 @@ export default function HeroBanner() {
   const [date, setDate] = useState<string>("");
 
   useEffect(() => {
-    const formattedDate = new Date().toLocaleDateString("bn-BD", {
-      dateStyle: "full",
-    });
-    setDate(formattedDate);
+    const timer = setTimeout(() => {
+      const formattedDate = new Date().toLocaleDateString("bn-BD", {
+        dateStyle: "full",
+      });
+      setDate(formattedDate);
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   return (

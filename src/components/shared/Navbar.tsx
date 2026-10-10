@@ -13,43 +13,37 @@ import {
   DEFAULT_TICKER_ITEMS,
 } from "@/services/bazarApi";
 
+import { authClient } from "@/lib/auth-client";
+
 function NavbarContent() {
   const pathname = usePathname();
   const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
   const [tickerItems, setTickerItems] = useState<TickerItem[]>(DEFAULT_TICKER_ITEMS);
-  const [activeCategory, setActiveCategory] = useState<string>("chal");
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  const [userName, setUserName] = useState<string>("Rezwan Ahmed");
+  const [activeCategory, setActiveCategory] = useState<string>("");
   const [date, setDate] = useState<string>("");
+
+  const { data: session } = authClient.useSession();
+  const isLoggedIn = !!session;
+  const userName = session?.user?.name || "User";
+  const userEmail = session?.user?.email || "";
 
   useEffect(() => {
     // Generate Bangla date
-    const formattedDate = new Date().toLocaleDateString("bn-BD", {
-      dateStyle: "full",
-    });
-    setDate(formattedDate);
-
-    const savedAuth = localStorage.getItem("bazar_logged_in");
-    if (savedAuth === "true") {
-      setIsLoggedIn(true);
-    }
-    
-    const loadUserName = () => {
-      const savedName = localStorage.getItem("bazar_user_name");
-      if (savedName) setUserName(savedName);
-    };
-    loadUserName();
-    
-    window.addEventListener("profile_updated", loadUserName);
-    window.addEventListener("auth_changed", () => {
-      setIsLoggedIn(localStorage.getItem("bazar_logged_in") === "true");
-    });
-
-    return () => {
-      window.removeEventListener("profile_updated", loadUserName);
-      // cleanup auth_changed if needed
-    };
+    const timer = setTimeout(() => {
+      const formattedDate = new Date().toLocaleDateString("bn-BD", {
+        dateStyle: "full",
+      });
+      setDate(formattedDate);
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
+
+  const handleToggleAuth = async (status: boolean) => {
+    if (!status) {
+      await authClient.signOut();
+      toast.success("সফলভাবে সাইন আউট হয়েছেন।");
+    }
+  };
 
   useEffect(() => {
     // Fetch data from API with fallback
@@ -78,15 +72,7 @@ function NavbarContent() {
     fetchNavbarData();
   }, []);
 
-  const handleToggleAuth = (status: boolean) => {
-    setIsLoggedIn(status);
-    localStorage.setItem("bazar_logged_in", status ? "true" : "false");
-    
-    if (!status) {
-      document.cookie = "bazar_auth=; path=/; max-age=0";
-      toast.success("সফলভাবে সাইন আউট হয়েছেন।");
-    }
-  };
+
 
   return (
     <header className="w-full bg-white border-b border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.03)] sticky top-0 z-50">
@@ -161,7 +147,7 @@ function NavbarContent() {
                 <ul tabIndex={0} className="dropdown-content z-[100] menu p-3 sm:p-4 shadow-xl bg-white rounded-2xl w-56 sm:w-64 border border-gray-100 mt-2">
                   <div className="flex flex-col gap-0.5 mb-3 pb-3 border-b border-gray-100 px-2 pt-1">
                     <span className="text-sm font-bold text-gray-900">{userName}</span>
-                    <span className="text-xs text-gray-500 truncate">rezwanahmed@gmail.com</span>
+                    <span className="text-xs text-gray-500 truncate">{userEmail}</span>
                   </div>
                   <li>
                     <Link href="/profile" className="text-sm font-semibold text-gray-700 hover:text-[#0b7a48] hover:bg-emerald-50 px-3 py-2.5 rounded-lg flex items-center gap-2.5 transition-colors">
@@ -191,7 +177,7 @@ function NavbarContent() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="flex items-center justify-start md:justify-center overflow-x-auto py-2.5 gap-1.5 sm:gap-2.5 no-scrollbar scroll-smooth">
             {categories.map((cat) => {
-              const isActive = pathname === `/category/${cat.slug}` || (pathname === '/' && activeCategory === cat.id);
+              const isActive = pathname === `/category/${cat.slug}`;
               return (
                 <Link
                   key={cat.id}
