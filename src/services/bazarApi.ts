@@ -1,5 +1,6 @@
 import { Category, Product, TickerItem } from "@/types";
 
+export const MAIN_API_URL = "https://openapi.programming-hero.com/api/bazardor";
 export const BASE_URL_1 = "https://api.api-store.workers.dev/api/bazardor";
 export const BASE_URL_2 = "https://api.abcz.workers.dev/api/bazardor";
 
@@ -73,7 +74,11 @@ export const DEFAULT_TICKER_ITEMS: TickerItem[] = [
 // ─── API Fetchers ────────────────────────────────────────────────────────────
 
 export async function getCategories(): Promise<Category[]> {
-  const urls = [`${BASE_URL_1}/categories`, `${BASE_URL_2}/categories`];
+  const urls = [
+    `${MAIN_API_URL}/categories`,
+    `${BASE_URL_1}/categories`,
+    `${BASE_URL_2}/categories`,
+  ];
   for (const url of urls) {
     try {
       const res = await fetch(url, { cache: "no-store" });
@@ -87,7 +92,11 @@ export async function getCategories(): Promise<Category[]> {
 }
 
 export async function getProducts(): Promise<Product[]> {
-  const urls = [`${BASE_URL_1}/products`, `${BASE_URL_2}/products`];
+  const urls = [
+    `${MAIN_API_URL}/products`,
+    `${BASE_URL_1}/products`,
+    `${BASE_URL_2}/products`,
+  ];
   for (const url of urls) {
     try {
       const res = await fetch(url, { cache: "no-store" });
